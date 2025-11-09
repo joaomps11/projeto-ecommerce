@@ -1,0 +1,242 @@
+CREATE DATABASE IF NOT EXISTS `ecommerce` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `ecommerce`;
+
+DROP TABLE IF EXISTS `cliente`;
+CREATE TABLE `cliente` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `nome` varchar(200) NOT NULL,
+  `idade` int DEFAULT NULL,
+  `sexo` enum('M','F','O') NOT NULL,
+  `data_nascimento` date NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `vendedor`;
+CREATE TABLE `vendedor` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `nome` varchar(200) NOT NULL,
+  `razao_social` varchar(200) DEFAULT NULL,
+  `tipo` enum('PF','PJ') NOT NULL,
+  `nota_media` decimal(3,2) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `produto`;
+CREATE TABLE `produto` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `nome` varchar(200) NOT NULL,
+  `categoria` varchar(100) DEFAULT NULL,
+  `descricao` text,
+  `quantidade_estoque` int DEFAULT '0',
+  `valor` decimal(10,2) NOT NULL,
+  `observacoes` text,
+  `vendedor_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `vendedor_id` (`vendedor_id`),
+  CONSTRAINT `produto_ibfk_1` FOREIGN KEY (`vendedor_id`) REFERENCES `vendedor` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `transportadora`;
+CREATE TABLE `transportadora` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `nome` varchar(200) NOT NULL,
+  `cnpj` varchar(18) DEFAULT NULL,
+  `avaliacao_media` decimal(3,2) DEFAULT NULL,
+  `cidade` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `venda`;
+CREATE TABLE `venda` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `cliente_id` bigint NOT NULL,
+  `transportadora_id` bigint NOT NULL,
+  `data_hora` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `endereco_destino` text NOT NULL,
+  `valor_frete` decimal(10,2) DEFAULT '0.00',
+  `valor_total` decimal(10,2) DEFAULT '0.00',
+  `vendedor_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `cliente_id` (`cliente_id`),
+  KEY `transportadora_id` (`transportadora_id`),
+  KEY `fk_venda_vendedor` (`vendedor_id`),
+  CONSTRAINT `fk_venda_vendedor` FOREIGN KEY (`vendedor_id`) REFERENCES `vendedor` (`id`),
+  CONSTRAINT `venda_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `cliente` (`id`),
+  CONSTRAINT `venda_ibfk_2` FOREIGN KEY (`transportadora_id`) REFERENCES `transportadora` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `item_venda`;
+CREATE TABLE `item_venda` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `venda_id` bigint NOT NULL,
+  `produto_id` bigint NOT NULL,
+  `quantidade` int NOT NULL,
+  `preco_unitario` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `venda_id` (`venda_id`),
+  KEY `produto_id` (`produto_id`),
+  CONSTRAINT `item_venda_ibfk_1` FOREIGN KEY (`venda_id`) REFERENCES `venda` (`id`),
+  CONSTRAINT `item_venda_ibfk_2` FOREIGN KEY (`produto_id`) REFERENCES `produto` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `log_eventos`;
+CREATE TABLE `log_eventos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tipo` varchar(50) DEFAULT NULL,
+  `referencia_id` int DEFAULT NULL,
+  `mensagem` varchar(255) DEFAULT NULL,
+  `data_hora` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `cliente_especial`;
+CREATE TABLE `cliente_especial` (
+  `cliente_id` bigint NOT NULL,
+  `cashback_disponivel` decimal(12,2) DEFAULT '0.00',
+  PRIMARY KEY (`cliente_id`),
+  CONSTRAINT `cliente_especial_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `cliente` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `funcionario_especial`;
+CREATE TABLE `funcionario_especial` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `vendedor_id` bigint NOT NULL,
+  `bonus_salarial` decimal(10,2) DEFAULT '0.00',
+  PRIMARY KEY (`id`),
+  KEY `vendedor_id` (`vendedor_id`),
+  CONSTRAINT `funcionario_especial_ibfk_1` FOREIGN KEY (`vendedor_id`) REFERENCES `vendedor` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `cliente` VALUES 
+(1,'João Silva',25,'M','2000-03-15'),(2,'Maria Oliveira',30,'F','1995-07-20'),(3,'Pedro Santos',22,'M','2003-01-10'),(4,'Ana Souza',28,'F','1997-09-22'),(5,'Lucas Pereira',31,'M','1994-06-05'),(6,'Fernanda Costa',24,'F','2001-12-09'),(7,'Ricardo Lima',35,'M','1989-05-02'),(8,'Juliana Almeida',26,'F','1999-04-18'),(9,'Bruno Rocha',29,'M','1996-11-30'),(10,'Carla Mendes',27,'F','1998-10-14'),(11,'Gustavo Azevedo',23,'M','2002-07-11'),(12,'Larissa Figueiredo',32,'F','1993-03-29'),(13,'André Matos',28,'M','1997-05-21'),(14,'Camila Torres',22,'F','2003-09-09'),(15,'Felipe Nunes',26,'M','1999-02-17'),(16,'Patrícia Ramos',33,'F','1992-08-25'),(17,'Tiago Gomes',24,'M','2001-04-04'),(18,'Beatriz Lopes',27,'F','1998-01-19'),(19,'Diego Barros',29,'M','1996-06-27'),(20,'Isabela Pires',30,'F','1995-11-12'),(21,'Rafael Duarte',21,'M','2004-10-03'),(22,'Amanda Nascimento',25,'F','2000-09-01'),(23,'Eduardo Freitas',28,'M','1997-07-10'),(24,'Tatiane Silva',31,'F','1994-03-08'),(25,'Leandro Costa',34,'M','1991-12-20'),(26,'Letícia Carvalho',20,'F','2005-02-26'),(27,'Vinícius Mendes',27,'M','1998-05-18'),(28,'Gabriela Dias',23,'F','2002-06-22'),(29,'Rodrigo Souza',35,'M','1989-08-07'),(30,'Natália Campos',29,'F','1996-09-13'),(31,'César Teixeira',26,'M','1999-04-30'),(32,'Aline Ribeiro',24,'F','2001-01-14'),(33,'Paulo Henrique',32,'M','1993-02-09'),(34,'Caroline Monteiro',22,'F','2003-05-27'),(35,'Henrique Duarte',25,'M','2000-12-01'),(36,'Roberta Sales',30,'F','1995-06-23'),(37,'Daniel Moreira',28,'M','1997-07-05'),(38,'Evelyn Castro',27,'F','1998-09-19'),(39,'Marcos Tavares',33,'M','1992-04-02'),(40,'Juliana Prado',23,'F','2002-10-21'),(41,'Bruno Ferreira',26,'M','1999-05-25'),(42,'Carolina Viana',24,'F','2001-02-13'),(43,'Rafaela Bezerra',31,'F','1994-11-17'),(44,'Igor Menezes',29,'M','1996-08-08'),(45,'Priscila Cunha',25,'F','2000-04-29'),(46,'Vitor Barbosa',22,'M','2003-06-15'),(47,'Larissa Moura',28,'F','1997-03-10'),(48,'Alexandre Almeida',30,'M','1995-07-30'),(49,'Marina Duarte',21,'F','2004-09-16'),(50,'Fábio Moreira',35,'M','1989-02-22'),(51,'Cíntia Rocha',26,'F','1999-10-09'),(52,'Mateus Gonçalves',27,'M','1998-03-03'),(53,'Érika Nogueira',29,'F','1996-06-01'),(54,'Thiago Lopes',32,'M','1993-11-27'),(55,'Renata Freire',25,'F','2000-01-05'),(56,'Douglas Santos',34,'M','1991-09-12'),(57,'Paula Neves',24,'F','2001-12-14'),(58,'Guilherme Batista',23,'M','2002-07-03'),(59,'Mônica Ribeiro',28,'F','1997-05-09'),(60,'Rogério Lima',31,'M','1994-08-28'),(61,'Tatiana Carvalho',30,'F','1995-10-05'),(62,'Everton Borges',27,'M','1998-01-12'),(63,'Cláudia Farias',25,'F','2000-02-20'),(64,'Hugo Cardoso',29,'M','1996-03-30'),(65,'Patrícia Moraes',26,'F','1999-11-11'),(66,'Caio Rezende',22,'M','2003-04-08'),(67,'Jéssica Luz',24,'F','2001-06-06'),(68,'Felipe Tavares',28,'M','1997-08-24'),(69,'Bruna Santos',30,'F','1995-05-16'),(70,'Eduarda Gomes',27,'F','1998-09-19'),(71,'Fernando Marques',35,'M','1989-10-31'),(72,'Lívia Rocha',22,'F','2003-07-17'),(73,'Sérgio Nogueira',33,'M','1992-01-23'),(74,'Patrícia Costa',29,'F','1996-02-15'),(75,'Leonardo Ramos',26,'M','1999-09-28'),(76,'Elaine Teixeira',27,'F','1998-04-06'),(77,'Gustavo Souza',24,'M','2001-10-01'),(78,'Sabrina Alves',25,'F','2000-12-18'),(79,'Otávio Martins',31,'M','1994-03-25'),(80,'Helena Furtado',28,'F','1997-11-13'),(81,'Márcio Silva',29,'M','1996-09-05'),(82,'Daniele Melo',30,'F','1995-07-07'),(83,'Joana Ferreira',21,'F','2004-08-26'),(84,'Cauã Ribeiro',20,'M','2005-04-11'),(85,'Melina Duarte',33,'F','1992-06-04'),(86,'Rômulo Pacheco',34,'M','1991-01-30'),(87,'Talita Correia',27,'F','1998-03-02'),(88,'Luan Batista',28,'M','1997-09-29'),(89,'Raquel Torres',23,'F','2002-05-19'),(90,'Samuel Vieira',26,'M','1999-02-11'),(91,'Bianca Souza',25,'F','2000-06-07'),(92,'Marcelo Lopes',32,'M','1993-10-08'),(93,'Débora Lima',24,'F','2001-03-15'),(94,'Pablo Azevedo',35,'M','1989-07-01'),(95,'Ellen Moreira',28,'F','1997-12-27'),(96,'Natan Moura',31,'M','1994-09-22'),(97,'Clara Fonseca',22,'F','2003-05-03'),(98,'Rafael Correia',23,'M','2002-08-14'),(99,'Ariane Reis',29,'F','1996-02-28'),(100,'Jonas Carvalho',33,'M','1992-11-06');
+
+INSERT INTO `cliente_especial` VALUES 
+(2,25.50),(5,10.00),(8,15.75),(15,30.00),(22,5.25),(35,12.00),(47,8.80),(58,50.00),(73,20.00),(91,45.60);
+
+INSERT INTO `item_venda` VALUES 
+(1,1,1,2,120.00),(2,1,2,1,250.00),(3,2,3,1,899.99),(4,2,4,2,250.00),(5,3,5,1,350.00),(6,3,6,1,2499.00),
+(7,4,7,1,499.00),(8,4,8,1,350.00),(9,5,9,2,379.00),(10,5,10,1,3500.00);
+
+INSERT INTO `produto` VALUES 
+(1,'Mouse Gamer RGB','Periféricos','Mouse com iluminação RGB, 6 botões programáveis e DPI ajustável.',50,120.00,'Garantia de 12 meses.',1),
+(2,'Teclado Mecânico Redragon','Periféricos','Teclado com switches mecânicos, ideal para jogos e digitação rápida.',30,250.00,'Layout ABNT2, retroiluminado.',2),
+(3,'Monitor LG 24\" Full HD','Monitores','Monitor LED de 24 polegadas com resolução Full HD e entrada HDMI.',15,899.99,'Painel IPS, bordas finas.',3),
+(4,'SSD Kingston 480GB','Armazenamento','SSD de alto desempenho para desktops e notebooks.',40,250.00,'Velocidade de leitura até 500MB/s.',4),
+(5,'Headset HyperX Cloud II','Áudio','Headset gamer com som surround 7.1 e microfone removível.',20,350.00,'Compatível com PC, PS4 e Xbox.',5),
+(6,'Placa de Vídeo RTX 3060','Hardware','Placa de vídeo Nvidia GeForce RTX 3060 com 12GB GDDR6.',10,2499.00,'Ideal para jogos e aplicações gráficas.',6),
+(7,'Fonte Corsair 650W','Energia','Fonte de alimentação 80 Plus Bronze de 650W.',25,499.00,'Alta eficiência e baixo ruído.',7),
+(8,'Gabinete Gamer RGB','Gabinetes','Gabinete com vidro temperado e iluminação RGB.',18,350.00,'Suporte para até 6 ventoinhas.',8),
+(9,'Memória RAM 16GB DDR4','Hardware','Memória DDR4 de 16GB 3200MHz para alto desempenho.',35,379.00,'Compatível com plataformas Intel e AMD.',9),
+(10,'Notebook Lenovo i5 8GB 256GB SSD','Computadores','Notebook com processador Intel i5 e SSD de 256GB.',8,3500.00,'Tela de 15,6 polegadas Full HD.',10),
+(11,'Mousepad Gamer XXL',NULL,'Mousepad antiderrapante e resistente à água.',60,99.90,'Dimensões 90x40cm.',1),
+(12,'Teclado Sem Fio Logitech',NULL,'Teclado silencioso com conexão Bluetooth.',25,229.00,'Bateria de longa duração.',2),
+(13,'Monitor Samsung 27\" Curvo',NULL,'Monitor curvo Full HD 75Hz com tecnologia Eye Saver.',12,1299.00,'Ideal para imersão em jogos.',3),
+(14,'HD Externo Seagate 2TB',NULL,'HD portátil USB 3.0 com alta taxa de transferência.',30,479.00,'Compatível com Windows e Mac.',4),
+(15,'Microfone Fifine K690',NULL,'Microfone condensador USB com tripé incluso.',15,499.00,'Perfeito para streaming e podcasts.',5),
+(16,'Placa-Mãe ASUS B550M',NULL,'Placa-mãe AM4 com suporte a Ryzen 5000.',10,899.00,'DDR4, PCIe 4.0.',6),
+(17,'Cooler Master 120mm',NULL,'Cooler com iluminação RGB e baixo ruído.',40,189.00,'Compatível com Intel e AMD.',7),
+(18,'Cadeira Gamer ThunderX3',NULL,'Cadeira ergonômica com apoio de cabeça ajustável.',8,1199.00,'Suporta até 150kg.',8),
+(19,'Estabilizador SMS 600VA',NULL,'Estabilizador bivolt com 6 tomadas.',20,259.00,'Proteção contra surtos elétricos.',9),
+(20,'Notebook Dell i7 16GB 512GB SSD',NULL,'Notebook profissional com tela de 15,6\"',5,4899.00,'SSD 512GB, ideal para produtividade.',10);
+
+INSERT INTO `transportadora` VALUES 
+(1,'Correios','12.345.678/0001-99',4.30,'Brasília'),(2,'Loggi','98.765.432/0001-88',4.60,'São Paulo'),(3,'JadLog','23.456.789/0001-11',4.20,'Rio de Janeiro'),(4,'Sequoia Express','34.567.890/0001-22',4.00,'Curitiba'),(5,'Azul Cargo','45.678.901/0001-33',4.50,'Belo Horizonte');
+
+INSERT INTO `venda` VALUES 
+(1,1,1,'2025-11-09 00:57:32','Rua das Flores, 123 - São Paulo/SP',25.00,275.00,1),(2,2,3,'2025-11-09 00:57:32','Av. Brasil, 400 - Recife/PE',40.00,939.99,1),(3,3,2,'2025-11-09 00:57:32','Rua Nova, 45 - Salvador/BA',35.00,285.00,2),(4,4,5,'2025-11-09 00:57:32','Rua dos Cravos, 10 - Porto Alegre/RS',28.00,378.00,4),(5,5,4,'2025-11-09 00:57:32','Av. Independência, 890 - Belo Horizonte/MG',30.00,2530.00,2),(6,6,1,'2025-11-09 00:57:32','Rua A, 22 - Fortaleza/CE',42.00,495.00,3),(7,7,2,'2025-11-09 00:57:32','Av. das Nações, 55 - Curitiba/PR',20.00,370.00,1),(8,8,3,'2025-11-09 00:57:32','Rua B, 101 - Brasília/DF',27.00,380.00,5),(9,9,5,'2025-11-09 00:57:32','Av. Central, 789 - Natal/RN',35.00,3535.00,4),(10,10,1,'2025-11-09 00:57:32','Rua Faria Lima, 77 - São Paulo/SP',25.00,2599.00,3);
+
+INSERT INTO `vendedor` VALUES 
+(1,'TechWorld','TechWorld Soluções Digitais LTDA','PJ',4.80),(2,'PC Master','PC Master Informática LTDA','PJ',4.50),(3,'João Martins','João Martins MEI','PF',4.70),(4,'Mega Hardware','Mega Hardware Comércio LTDA','PJ',4.30),(5,'InfoPlus','InfoPlus Serviços Digitais','PJ',4.90),(6,'Gabriel Souza','Gabriel Souza MEI','PF',4.60),(7,'Digital Pro','Digital Pro Comércio Online','PJ',4.40),(8,'TecnoShop','TecnoShop LTDA','PJ',4.80),(9,'Rafa Informática','Rafa Informática MEI','PF',4.50),(10,'BestParts','BestParts Distribuidora LTDA','PJ',4.90);
+
+DROP VIEW IF EXISTS `vw_vendas_por_vendedor`;
+CREATE VIEW `vw_vendas_por_vendedor` AS 
+select `vd`.`nome` AS `vendedor`,count(`v`.`id`) AS `qtd_vendas`,sum(`v`.`valor_total`) AS `total_vendas` 
+from (`venda` `v` join `vendedor` `vd` on((`v`.`vendedor_id` = `vd`.`id`))) 
+group by `vd`.`nome`;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS `arrecadado`$$
+CREATE FUNCTION `arrecadado`(p_data date, p_id_vendedor bigint) RETURNS decimal(10,2)
+    DETERMINISTIC
+begin
+	declare v_total decimal(10,2);
+    select sum(valor_total)
+    into v_total
+    from venda
+    where date(data_hora) = p_data
+		and vendedor_id = p_id_vendedor;
+	return ifnull(v_total, 0.00);
+end$$
+
+DROP FUNCTION IF EXISTS `calcula_idade`$$
+CREATE FUNCTION `calcula_idade`(p_id_cliente BIGINT) RETURNS int
+    DETERMINISTIC
+begin
+	declare v_idade int;
+    select timestampdiff(year, data_nascimento, curdate())
+    into v_idade
+    from cliente
+    where id = p_id_cliente;
+    return v_idade;
+end$$
+
+DROP FUNCTION IF EXISTS `soma_fretes`$$
+CREATE FUNCTION `soma_fretes`(p_destino varchar(255)) RETURNS decimal(10,2)
+    DETERMINISTIC
+begin
+	declare v_total decimal(10,2);
+    select sum(valor_frete)
+    into v_total
+    from venda
+    where endereco_destino like concat('%', p_destino, '%');
+    return ifnull(v_total, 0.00);
+end$$
+
+DROP PROCEDURE IF EXISTS `Estatisticas`$$
+CREATE PROCEDURE `Estatisticas`()
+BEGIN
+    SELECT produto_id, COUNT(*) AS qtd 
+    FROM vendas 
+    GROUP BY produto_id 
+    ORDER BY qtd DESC 
+    LIMIT 1;
+END$$
+
+DROP TRIGGER IF EXISTS `trg_remover_cliente_especial`$$
+CREATE TRIGGER `trg_remover_cliente_especial` AFTER UPDATE ON `cliente_especial` FOR EACH ROW BEGIN
+    IF NEW.cashback_disponivel = 0 THEN
+        DELETE FROM cliente_especial WHERE cliente_id = NEW.cliente_id;
+
+        INSERT INTO log_eventos(tipo, referencia_id, mensagem)
+        VALUES ('Remoção', NEW.cliente_id, CONCAT('Cliente ', NEW.cliente_id, ' removido de clientes especiais devido a cashback 0'));
+    END IF;
+END$$
+
+DROP TRIGGER IF EXISTS `trg_vendedor_especial`$$
+CREATE TRIGGER `trg_vendedor_especial` AFTER INSERT ON `venda` FOR EACH ROW BEGIN
+    DECLARE bonus DECIMAL(10,2);
+    IF NEW.valor_total > 1000 THEN
+        SET bonus = NEW.valor_total * 0.05;
+        INSERT INTO funcionario_especial (vendedor_id, bonus_salarial) VALUES (NEW.vendedor_id, bonus);
+
+        INSERT INTO log_eventos(tipo, referencia_id, mensagem)
+        VALUES ('Bônus', NEW.vendedor_id, CONCAT('Bônus de R$ ', bonus, ' adicionado ao vendedor ', NEW.vendedor_id));
+    END IF;
+END$$
+
+DROP TRIGGER IF EXISTS `trg_cliente_especial`$$
+CREATE TRIGGER `trg_cliente_especial` AFTER INSERT ON `venda` FOR EACH ROW BEGIN
+    DECLARE cashback DECIMAL(10,2);
+    IF NEW.valor_total > 500 THEN
+        SET cashback = NEW.valor_total * 0.02;
+        INSERT INTO cliente_especial (cliente_id, cashback_disponivel) 
+        VALUES (NEW.cliente_id, cashback)
+        ON DUPLICATE KEY UPDATE cashback_disponivel = cashback_disponivel + cashback;
+
+        INSERT INTO log_eventos(tipo, referencia_id, mensagem)
+        VALUES ('Cashback', NEW.cliente_id, CONCAT('Cashback de R$ ', cashback, ' adicionado ao cliente ', NEW.cliente_id));
+    END IF;
+END$$
+
+DELIMITER ;
